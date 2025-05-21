@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pong Game</title>
+    <style>
+        body { background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        canvas { background: #000; display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="pong" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('pong');
+        const ctx = canvas.getContext('2d');
+
+        const paddleWidth = 10, paddleHeight = 80, ballSize = 10;
+        let leftY = 160, rightY = 160, leftScore = 0, rightScore = 0;
+        let ballX = 295, ballY = 195, ballVX = 4, ballVY = 4;
+
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        function drawCircle(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawText(text, x, y, color) {
+            ctx.fillStyle = color;
+            ctx.font = "32px Arial";
+            ctx.fillText(text, x, y);
+        }
+
+        function resetBall() {
+            ballX = canvas.width / 2 - ballSize / 2;
+            ballY = canvas.height / 2 - ballSize / 2;
+            ballVX = (Math.random() > 0.5 ? 4 : -4);
+            ballVY = (Math.random() > 0.5 ? 4 : -4);
+        }
+
+        function draw() {
+            drawRect(0, 0, canvas.width, canvas.height, "#000");
+            drawRect(0, leftY, paddleWidth, paddleHeight, "#fff");
+            drawRect(canvas.width - paddleWidth, rightY, paddleWidth, paddleHeight, "#fff");
+            drawCircle(ballX + ballSize/2, ballY + ballSize/2, ballSize/2, "#fff");
+            drawText(leftScore, canvas.width/4, 50, "#fff");
+            drawText(rightScore, 3*canvas.width/4, 50, "#fff");
+        }
+
+        function update() {
+            ballX += ballVX;
+            ballY += ballVY;
+
+            // Top and bottom collision
+            if (ballY <= 0 || ballY + ballSize >= canvas.height) ballVY = -ballVY;
+
+            // Left paddle collision
+            if (ballX <= paddleWidth && ballY + ballSize > leftY && ballY < leftY + paddleHeight) {
+                ballVX = -ballVX;
+                ballX = paddleWidth;
+            }
+
+            // Right paddle collision
+            if (ballX + ballSize >= canvas.width - paddleWidth && ballY + ballSize > rightY && ballY < rightY + paddleHeight) {
+                ballVX = -ballVX;
+                ballX = canvas.width - paddleWidth - ballSize;
+            }
+
+            // Score
+            if (ballX < 0) {
+                rightScore++;
+                resetBall();
+            }
+            if (ballX + ballSize > canvas.width) {
+                leftScore++;
+                resetBall();
+            }
+
+            // Simple AI for right paddle
+            if (rightY + paddleHeight/2 < ballY + ballSize/2) rightY += 4;
+            else if (rightY + paddleHeight/2 > ballY + ballSize/2) rightY -= 4;
+            rightY = Math.max(0, Math.min(canvas.height - paddleHeight, rightY));
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowUp') leftY -= 20;
+            if (e.key === 'ArrowDown') leftY += 20;
+            leftY = Math.max(0, Math.min(canvas.height - paddleHeight, leftY));
+        });
+
+        function game() {
+            update();
+            draw();
+            requestAnimationFrame(game);
+        }
+
+        game();
+    </script>
+</body>
+</html>
